@@ -11,4 +11,4 @@ COPY target/analyse-service-0.0.1-SNAPSHOT.jar /app/analyse-service.jar
 CMD ["java", "-jar", "/app/analyse-service.jar"]
 
 # Exposer le port utilisé par le service (à adapter selon votre config)
-EXPOSE 8083
+EXPOSE 8090
