@@ -5,7 +5,7 @@ RUN mkdir /app
 WORKDIR /app
 
 # Copy the JAR file into the container
-COPY target/billing-producer-0.0.1-SNAPSHOT.jar /app/billing-producer.jar
+COPY target/Billing-producer-0.0.1-SNAPSHOT.jar /app/billing-producer.jar
 
 # Run the billing-producer service
 CMD ["java", "-jar", "/app/billing-producer.jar"]
