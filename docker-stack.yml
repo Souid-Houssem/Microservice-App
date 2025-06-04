@@ -1,0 +1,82 @@
+version: '3.8'
+
+services:
+
+  eureka-service:
+    image: houssemsouid/eureka-service:latest
+    ports:
+      - "8761:8761"
+    networks:
+      - microservice-net
+    environment:
+      - EUREKA_CLIENT_REGISTER_WITH_EUREKA=false
+      - EUREKA_CLIENT_FETCH_REGISTRY=false
+
+  gateway:
+    image: houssemsouid/gateway:latest
+    ports:
+      - "8888:8888"
+    networks:
+      - microservice-net
+    depends_on:
+      - eureka-service
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-service:8761/eureka
+
+  product-service:
+    image: houssemsouid/product-service:latest
+    networks:
+      - microservice-net
+    depends_on:
+      - eureka-service
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-service:8761/eureka
+
+  billing-service:
+    image: houssemsouid/billing-service:latest
+    networks:
+      - microservice-net
+    depends_on:
+      - eureka-service
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-service:8761/eureka
+
+  billing-producer:
+    image: houssemsouid/billing-producer:latest
+    networks:
+      - microservice-net
+    depends_on:
+      - eureka-service
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-service:8761/eureka
+
+  analyse-service:
+    image: houssemsouid/analyse-service:latest
+    networks:
+      - microservice-net
+    depends_on:
+      - eureka-service
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-service:8761/eureka
+
+  custmer-service:
+    image: houssemsouid/custmer-service:latest
+    networks:
+      - microservice-net
+    depends_on:
+      - eureka-service
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-service:8761/eureka
+
+  frontend:
+    image: houssemsouid/frontend:latest
+    ports:
+      - "4200:80"
+    networks:
+      - microservice-net
+    depends_on:
+      - gateway
+
+networks:
+  microservice-net:
+    driver: overlay
