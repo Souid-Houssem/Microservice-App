@@ -5,7 +5,7 @@ RUN mkdir /app
 WORKDIR /app
 
 # Copy JAR file into container
-COPY target/custmer-service-0.0.1-SNAPSHOT.jar /app/customer-service.jar
+COPY target/*.jar /app/analyse-service.jar
 
 # Set the command to run the service
 CMD ["java", "-jar", "/app/customer-service.jar"]
