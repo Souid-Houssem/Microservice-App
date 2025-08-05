@@ -5,10 +5,10 @@ RUN mkdir /app
 WORKDIR /app
 
 # Copy JAR file into container
-COPY target/*.jar /app/customer-service.jar
+COPY target/*.jar /app/custmer-service.jar
 
 # Set the command to run the service
-CMD ["java", "-jar", "/app/customer-service.jar"]
+CMD ["java", "-jar", "/app/custmer-service.jar"]
 
 # Expose the same port as the microservice
 EXPOSE 8082
