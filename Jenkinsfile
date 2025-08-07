@@ -164,5 +164,12 @@ pipeline {
                 }
             }
         }
+                stage('Deploy Docker Stack') {
+            steps {
+                echo "🚀 Deploying docker-stack.yml to Docker Swarm"
+                sh 'docker stack deploy -c docker-stack.yml microservices'
+            }
+        }
+
     }
 }
