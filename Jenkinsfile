@@ -50,34 +50,7 @@ pipeline {
         
         
         
-    stage('SonarQube Analysis') {
-            steps {
-                script {
-                    // Define project names and their actual pom paths
-                    def sonarProjects = [
-                        [name: 'Analyse-Service', path: 'Analyse-Service'],
-                        [name: 'Billing-producer', path: 'Billing-producer'],
-                        [name: 'custmer-service', path: 'custmer-service'],
-                        [name: 'product-service', path: 'product-service'],
-                        [name: 'gateway', path: 'gateway/gateway'],
-                        [name: 'eureka-service', path: 'eureka-service/eureka-service'],
-                        [name: 'Billing-service', path: 'Billing-service/Billing-service']
-                    ]
-
-                    for (proj in sonarProjects) {
-                        echo "Running SonarQube analysis for ${proj.name} at path ${proj.path}"
-                        dir(proj.path) {
-                            if (fileExists('pom.xml')) {
-                                sh "mvn sonar:sonar -Dsonar.projectKey=${proj.name} -Dsonar.host.url=${env.SONAR_HOST_URL} -Dsonar.login=${env.SONAR_TOKEN}"
-                            } else {
-                                echo "Skipping ${proj.name}: No pom.xml found in ${proj.path}"
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
+   
 
         
        
