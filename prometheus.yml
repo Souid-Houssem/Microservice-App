@@ -10,3 +10,11 @@ scrape_configs:
           - custmer-service:8082
           - product-service:8081
           - gateway:8888
+
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets:
+          - 192.168.56.10:8092   # Manager node
+          - 192.168.56.11:8092   # Worker 1
+          - 192.168.56.12:8092   # Worker 2
+
