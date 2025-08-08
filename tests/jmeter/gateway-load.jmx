@@ -9,7 +9,7 @@
         <collectionProp name="Arguments.arguments">
           <elementProp name="BASE_URL" elementType="Argument">
             <stringProp name="Argument.name">BASE_URL</stringProp>
-            <stringProp name="Argument.value">http://192.168.56.12:8888</stringProp>
+            <stringProp name="Argument.value">http://192.168.56.10:8888</stringProp>
           </elementProp>
         </collectionProp>
       </elementProp>
@@ -48,4 +48,5 @@
     </hashTree>
   </hashTree>
 </jmeterTestPlan>
+
 
