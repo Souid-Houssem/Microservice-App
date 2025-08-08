@@ -143,6 +143,23 @@ pipeline {
                 sh 'docker stack deploy -c docker-stack.yml microservices'
             }
         }
+        stage('Run JMeter Tests') {
+  steps {
+    sh '''
+      rm -f results.jtl; rm -rf jmeter-report
+      jmeter -n \
+        -t tests/jmeter/gateway-load.jmx \
+        -JHOST=192.168.56.10 -JPORT=8888 \
+        -JPATH=/PRODUCT-SERVICE/products \
+        -JUSERS=10 -JLOOPS=5 \
+        -l results.jtl \
+        -e -o jmeter-report
+    '''
+    publishHTML(target: [reportDir: 'jmeter-report', reportFiles: 'index.html', reportName: 'JMeter Report', alwaysLinkToLastBuild: true, keepAll: true])
+    archiveArtifacts artifacts: 'results.jtl', fingerprint: true
+  }
+}
+
 
     }
 }
