@@ -107,20 +107,38 @@ services:
         constraints: [ "node.role == worker" ]
         preferences: [ { spread: "node.id" } ]
 
-  analyse-service:
+    analyse-service:
     image: houssemsouid/analyse-service:latest
-    networks: [microservice-net]
-    depends_on: [eureka-service]
-    environment: *eureka_env
+    networks:
+      - microservice-net
+    depends_on:
+      - eureka-service
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://microservices_eureka-service:8761/eureka
+      - EUREKA_CLIENT_REGISTER_WITH_EUREKA=true
+      - EUREKA_CLIENT_FETCH_REGISTRY=true
+      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
     deploy:
       resources:
-        limits: { cpus: "0.50", memory: 512M }
-        reservations: { cpus: "0.10", memory: 128M }
-      update_config: { parallelism: 1, delay: 10s, failure_action: rollback }
-      restart_policy: { condition: any, max_attempts: 3 }
-    placement:
-      constraints: [ "node.role == worker" ]
-      preferences: [ { spread: "node.id" } ]
+        limits:
+          cpus: "0.50"
+          memory: 512M
+        reservations:
+          cpus: "0.10"
+          memory: 128M
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+      restart_policy:
+        condition: any
+        max_attempts: 3
+      placement:
+        constraints:
+          - node.role == worker
+        preferences:
+          - spread: node.id
+
 
   custmer-service:
     image: houssemsouid/custmer-service:latest
