@@ -1,253 +1,195 @@
 version: "3.8"
 
-# ------------------------
-# Shared (named) volumes
-# ------------------------
+# ---------- Extensions (YAML anchors) ----------
+x-eureka-env: &eureka_env
+  - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://microservices_eureka-service:8761/eureka
+  - EUREKA_CLIENT_REGISTER_WITH_EUREKA=true
+  - EUREKA_CLIENT_FETCH_REGISTRY=true
+  - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
+
+# ---------- Volumes ----------
 volumes:
   prometheus_data:
   grafana_data:
 
-# ------------------------
-# Configs (Prometheus)
-# ------------------------
+# ---------- Configs ----------
 configs:
   prometheus.yml:
     file: ./prometheus.yml
 
-# ------------------------
-# Networks
-# ------------------------
+# ---------- Networks ----------
 networks:
   microservice-net:
     driver: overlay
-    attachable: true  # lets you debug with `docker run --network ...`
+    attachable: true
 
+# ---------- Services ----------
 services:
-  # ======================
-  # Eureka (Service Discovery)
-  # ======================
   eureka-service:
     image: houssemsouid/eureka-service:latest
     ports:
       - "8761:8761"
     networks:
       microservice-net:
-        aliases:
-          - eureka-service  # keep short name resolvable
+        aliases: [eureka-service]
     environment:
       - EUREKA_CLIENT_REGISTER_WITH_EUREKA=false
       - EUREKA_CLIENT_FETCH_REGISTRY=false
     deploy:
-      placement:
-        constraints:
-          - node.role == worker
       resources:
         limits: { cpus: "0.50", memory: 512M }
         reservations: { cpus: "0.10", memory: 128M }
       update_config: { parallelism: 1, delay: 10s, failure_action: rollback }
       restart_policy: { condition: any, max_attempts: 3 }
+      placement:
+        constraints: [ "node.role == worker" ]
+        preferences: [ { spread: "node.id" } ]
 
-  # Helper env var so you can switch stack name easily if needed.
-  # If you deploy with "docker stack deploy -c docker-stack.yml microservices",
-  # the Eureka DNS name is "microservices_eureka-service".
-  # All clients below reference it via EUREKA_URL_PREFIX.
-  # If you deploy with a different stack name, replace the value here.
-  _env_anchor: &eureka_env
-    - EUREKA_URL_PREFIX=http://microservices_eureka-service:8761/eureka
-    - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=${EUREKA_URL_PREFIX}
-    - EUREKA_CLIENT_REGISTER_WITH_EUREKA=true
-    - EUREKA_CLIENT_FETCH_REGISTRY=true
-    - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
-
-  # ======================
-  # API Gateway
-  # ======================
   gateway:
     image: houssemsouid/gateway:latest
     ports:
       - "8888:8888"
-    networks:
-      - microservice-net
-    depends_on:
-      - eureka-service
+    networks: [microservice-net]
+    depends_on: [eureka-service]
     environment: *eureka_env
     deploy:
-      placement:
-        constraints:
-          - node.role == worker
       resources:
         limits: { cpus: "0.50", memory: 512M }
         reservations: { cpus: "0.10", memory: 128M }
       update_config: { parallelism: 1, delay: 10s, failure_action: rollback }
       restart_policy: { condition: any, max_attempts: 3 }
       placement:
-        preferences:
-          - spread: node.id
+        constraints: [ "node.role == worker" ]
+        preferences: [ { spread: "node.id" } ]
 
-  # ======================
-  # Domain Services
-  # ======================
   product-service:
     image: houssemsouid/product-service:latest
-    networks:
-      - microservice-net
-    depends_on:
-      - eureka-service
+    networks: [microservice-net]
+    depends_on: [eureka-service]
     environment: *eureka_env
     deploy:
-      placement:
-        constraints:
-          - node.role == worker
-        preferences:
-          - spread: node.id
       resources:
         limits: { cpus: "0.50", memory: 512M }
         reservations: { cpus: "0.10", memory: 128M }
       update_config: { parallelism: 1, delay: 10s, failure_action: rollback }
       restart_policy: { condition: any, max_attempts: 3 }
+      placement:
+        constraints: [ "node.role == worker" ]
+        preferences: [ { spread: "node.id" } ]
 
   billing-service:
     image: houssemsouid/billing-service:latest
-    networks:
-      - microservice-net
-    depends_on:
-      - eureka-service
+    networks: [microservice-net]
+    depends_on: [eureka-service]
     environment: *eureka_env
     deploy:
-      placement:
-        constraints:
-          - node.role == worker
-        preferences:
-          - spread: node.id
       resources:
         limits: { cpus: "0.50", memory: 512M }
         reservations: { cpus: "0.10", memory: 128M }
       update_config: { parallelism: 1, delay: 10s, failure_action: rollback }
       restart_policy: { condition: any, max_attempts: 3 }
+      placement:
+        constraints: [ "node.role == worker" ]
+        preferences: [ { spread: "node.id" } ]
 
   billing-producer:
     image: houssemsouid/billing-producer:latest
-    networks:
-      - microservice-net
-    depends_on:
-      - eureka-service
+    networks: [microservice-net]
+    depends_on: [eureka-service]
     environment: *eureka_env
     deploy:
-      placement:
-        constraints:
-          - node.role == worker
-        preferences:
-          - spread: node.id
       resources:
         limits: { cpus: "0.50", memory: 512M }
         reservations: { cpus: "0.10", memory: 128M }
       update_config: { parallelism: 1, delay: 10s, failure_action: rollback }
       restart_policy: { condition: any, max_attempts: 3 }
+      placement:
+        constraints: [ "node.role == worker" ]
+        preferences: [ { spread: "node.id" } ]
 
   analyse-service:
     image: houssemsouid/analyse-service:latest
-    networks:
-      - microservice-net
-    depends_on:
-      - eureka-service
+    networks: [microservice-net]
+    depends_on: [eureka-service]
     environment: *eureka_env
     deploy:
-      placement:
-        constraints:
-          - node.role == worker
-        preferences:
-          - spread: node.id
       resources:
         limits: { cpus: "0.50", memory: 512M }
         reservations: { cpus: "0.10", memory: 128M }
       update_config: { parallelism: 1, delay: 10s, failure_action: rollback }
       restart_policy: { condition: any, max_attempts: 3 }
+    placement:
+      constraints: [ "node.role == worker" ]
+      preferences: [ { spread: "node.id" } ]
 
   custmer-service:
     image: houssemsouid/custmer-service:latest
-    networks:
-      - microservice-net
-    depends_on:
-      - eureka-service
+    networks: [microservice-net]
+    depends_on: [eureka-service]
     environment: *eureka_env
     deploy:
-      placement:
-        constraints:
-          - node.role == worker
-        preferences:
-          - spread: node.id
       resources:
         limits: { cpus: "0.50", memory: 512M }
         reservations: { cpus: "0.10", memory: 128M }
       update_config: { parallelism: 1, delay: 10s, failure_action: rollback }
       restart_policy: { condition: any, max_attempts: 3 }
+      placement:
+        constraints: [ "node.role == worker" ]
+        preferences: [ { spread: "node.id" } ]
 
-  # ======================
-  # Frontend
-  # ======================
   frontend:
     image: houssemsouid/frontend:latest
     ports:
       - "4200:80"
-    networks:
-      - microservice-net
-    depends_on:
-      - gateway
+    networks: [microservice-net]
+    depends_on: [gateway]
     deploy:
-      placement:
-        constraints:
-          - node.role == worker
-        preferences:
-          - spread: node.id
       resources:
         limits: { cpus: "0.50", memory: 256M }
         reservations: { cpus: "0.05", memory: 128M }
       update_config: { parallelism: 1, delay: 10s, failure_action: rollback }
       restart_policy: { condition: any, max_attempts: 3 }
+      placement:
+        constraints: [ "node.role == worker" ]
+        preferences: [ { spread: "node.id" } ]
 
-  # ======================
-  # Monitoring
-  # ======================
   prometheus:
     image: prom/prometheus:latest
     ports:
       - "9090:9090"
-    networks:
-      - microservice-net
+    networks: [microservice-net]
     configs:
       - source: prometheus.yml
         target: /etc/prometheus/prometheus.yml
     volumes:
       - prometheus_data:/prometheus
     deploy:
-      placement:
-        constraints:
-          - node.role == worker
       resources:
         limits: { cpus: "0.50", memory: 512M }
         reservations: { cpus: "0.10", memory: 128M }
       update_config: { parallelism: 1, delay: 10s, failure_action: rollback }
       restart_policy: { condition: any, max_attempts: 3 }
+      placement:
+        constraints: [ "node.role == worker" ]
+        preferences: [ { spread: "node.id" } ]
 
   grafana:
     image: grafana/grafana:latest
     ports:
       - "3000:3000"
-    networks:
-      - microservice-net
-    depends_on:
-      - prometheus
+    networks: [microservice-net]
+    depends_on: [prometheus]
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
     volumes:
       - grafana_data:/var/lib/grafana
     deploy:
-      placement:
-        constraints:
-          - node.role == worker
       resources:
         limits: { cpus: "0.50", memory: 512M }
         reservations: { cpus: "0.10", memory: 128M }
       update_config: { parallelism: 1, delay: 10s, failure_action: rollback }
       restart_policy: { condition: any, max_attempts: 3 }
+      placement:
+        constraints: [ "node.role == worker" ]
+        preferences: [ { spread: "node.id" } ]
