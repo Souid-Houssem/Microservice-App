@@ -1,17 +1,67 @@
-version: '3.8'
+version: "3.8"
+
+# ------------------------
+# Shared (named) volumes
+# ------------------------
+volumes:
+  prometheus_data:
+  grafana_data:
+
+# ------------------------
+# Configs (Prometheus)
+# ------------------------
+configs:
+  prometheus.yml:
+    file: ./prometheus.yml
+
+# ------------------------
+# Networks
+# ------------------------
+networks:
+  microservice-net:
+    driver: overlay
+    attachable: true  # lets you debug with `docker run --network ...`
 
 services:
-
+  # ======================
+  # Eureka (Service Discovery)
+  # ======================
   eureka-service:
     image: houssemsouid/eureka-service:latest
     ports:
       - "8761:8761"
     networks:
-      - microservice-net
+      microservice-net:
+        aliases:
+          - eureka-service  # keep short name resolvable
     environment:
       - EUREKA_CLIENT_REGISTER_WITH_EUREKA=false
       - EUREKA_CLIENT_FETCH_REGISTRY=false
+    deploy:
+      placement:
+        constraints:
+          - node.role == worker
+      resources:
+        limits: { cpus: "0.50", memory: 512M }
+        reservations: { cpus: "0.10", memory: 128M }
+      update_config: { parallelism: 1, delay: 10s, failure_action: rollback }
+      restart_policy: { condition: any, max_attempts: 3 }
 
+  # Helper env var so you can switch stack name easily if needed.
+  # If you deploy with "docker stack deploy -c docker-stack.yml microservices",
+  # the Eureka DNS name is "microservices_eureka-service".
+  # All clients below reference it via EUREKA_URL_PREFIX.
+  # If you deploy with a different stack name, replace the value here.
+  _env_anchor: &eureka_env
+    - EUREKA_URL_PREFIX=http://microservices_eureka-service:8761/eureka
+    - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=${EUREKA_URL_PREFIX}
+    - EUREKA_CLIENT_REGISTER_WITH_EUREKA=true
+    - EUREKA_CLIENT_FETCH_REGISTRY=true
+    - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
+
+  # ======================
+  # API Gateway
+  # ======================
   gateway:
     image: houssemsouid/gateway:latest
     ports:
@@ -20,17 +70,41 @@ services:
       - microservice-net
     depends_on:
       - eureka-service
-    environment:
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-service:8761/eureka
+    environment: *eureka_env
+    deploy:
+      placement:
+        constraints:
+          - node.role == worker
+      resources:
+        limits: { cpus: "0.50", memory: 512M }
+        reservations: { cpus: "0.10", memory: 128M }
+      update_config: { parallelism: 1, delay: 10s, failure_action: rollback }
+      restart_policy: { condition: any, max_attempts: 3 }
+      placement:
+        preferences:
+          - spread: node.id
 
+  # ======================
+  # Domain Services
+  # ======================
   product-service:
     image: houssemsouid/product-service:latest
     networks:
       - microservice-net
     depends_on:
       - eureka-service
-    environment:
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-service:8761/eureka
+    environment: *eureka_env
+    deploy:
+      placement:
+        constraints:
+          - node.role == worker
+        preferences:
+          - spread: node.id
+      resources:
+        limits: { cpus: "0.50", memory: 512M }
+        reservations: { cpus: "0.10", memory: 128M }
+      update_config: { parallelism: 1, delay: 10s, failure_action: rollback }
+      restart_policy: { condition: any, max_attempts: 3 }
 
   billing-service:
     image: houssemsouid/billing-service:latest
@@ -38,8 +112,18 @@ services:
       - microservice-net
     depends_on:
       - eureka-service
-    environment:
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-service:8761/eureka
+    environment: *eureka_env
+    deploy:
+      placement:
+        constraints:
+          - node.role == worker
+        preferences:
+          - spread: node.id
+      resources:
+        limits: { cpus: "0.50", memory: 512M }
+        reservations: { cpus: "0.10", memory: 128M }
+      update_config: { parallelism: 1, delay: 10s, failure_action: rollback }
+      restart_policy: { condition: any, max_attempts: 3 }
 
   billing-producer:
     image: houssemsouid/billing-producer:latest
@@ -47,8 +131,18 @@ services:
       - microservice-net
     depends_on:
       - eureka-service
-    environment:
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-service:8761/eureka
+    environment: *eureka_env
+    deploy:
+      placement:
+        constraints:
+          - node.role == worker
+        preferences:
+          - spread: node.id
+      resources:
+        limits: { cpus: "0.50", memory: 512M }
+        reservations: { cpus: "0.10", memory: 128M }
+      update_config: { parallelism: 1, delay: 10s, failure_action: rollback }
+      restart_policy: { condition: any, max_attempts: 3 }
 
   analyse-service:
     image: houssemsouid/analyse-service:latest
@@ -56,8 +150,18 @@ services:
       - microservice-net
     depends_on:
       - eureka-service
-    environment:
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-service:8761/eureka
+    environment: *eureka_env
+    deploy:
+      placement:
+        constraints:
+          - node.role == worker
+        preferences:
+          - spread: node.id
+      resources:
+        limits: { cpus: "0.50", memory: 512M }
+        reservations: { cpus: "0.10", memory: 128M }
+      update_config: { parallelism: 1, delay: 10s, failure_action: rollback }
+      restart_policy: { condition: any, max_attempts: 3 }
 
   custmer-service:
     image: houssemsouid/custmer-service:latest
@@ -65,9 +169,22 @@ services:
       - microservice-net
     depends_on:
       - eureka-service
-    environment:
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-service:8761/eureka
+    environment: *eureka_env
+    deploy:
+      placement:
+        constraints:
+          - node.role == worker
+        preferences:
+          - spread: node.id
+      resources:
+        limits: { cpus: "0.50", memory: 512M }
+        reservations: { cpus: "0.10", memory: 128M }
+      update_config: { parallelism: 1, delay: 10s, failure_action: rollback }
+      restart_policy: { condition: any, max_attempts: 3 }
 
+  # ======================
+  # Frontend
+  # ======================
   frontend:
     image: houssemsouid/frontend:latest
     ports:
@@ -76,15 +193,41 @@ services:
       - microservice-net
     depends_on:
       - gateway
+    deploy:
+      placement:
+        constraints:
+          - node.role == worker
+        preferences:
+          - spread: node.id
+      resources:
+        limits: { cpus: "0.50", memory: 256M }
+        reservations: { cpus: "0.05", memory: 128M }
+      update_config: { parallelism: 1, delay: 10s, failure_action: rollback }
+      restart_policy: { condition: any, max_attempts: 3 }
 
+  # ======================
+  # Monitoring
+  # ======================
   prometheus:
     image: prom/prometheus:latest
     ports:
       - "9090:9090"
-    volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
     networks:
       - microservice-net
+    configs:
+      - source: prometheus.yml
+        target: /etc/prometheus/prometheus.yml
+    volumes:
+      - prometheus_data:/prometheus
+    deploy:
+      placement:
+        constraints:
+          - node.role == worker
+      resources:
+        limits: { cpus: "0.50", memory: 512M }
+        reservations: { cpus: "0.10", memory: 128M }
+      update_config: { parallelism: 1, delay: 10s, failure_action: rollback }
+      restart_policy: { condition: any, max_attempts: 3 }
 
   grafana:
     image: grafana/grafana:latest
@@ -97,7 +240,14 @@ services:
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
-
-networks:
-  microservice-net:
-    driver: overlay
+    volumes:
+      - grafana_data:/var/lib/grafana
+    deploy:
+      placement:
+        constraints:
+          - node.role == worker
+      resources:
+        limits: { cpus: "0.50", memory: 512M }
+        reservations: { cpus: "0.10", memory: 128M }
+      update_config: { parallelism: 1, delay: 10s, failure_action: rollback }
+      restart_policy: { condition: any, max_attempts: 3 }
