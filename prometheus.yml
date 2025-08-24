@@ -6,7 +6,6 @@ scrape_configs:
     metrics_path: '/actuator/prometheus'
     static_configs:
       - targets:
-          - billing-service:8083
           - custmer-service:8082
           - product-service:8081
           - gateway:8888
