@@ -95,7 +95,7 @@ services:
         condition: any
 
   # Customer Service
-  custmer-service:     # ⚠️ attention à l’orthographe "custmer" (pas "customer")
+  custmer-service:     # ⚠️ orthographe "custmer" gardée car image nommée ainsi
     image: houssemsouid/custmer-service:latest
     networks:
       - microservice-net
