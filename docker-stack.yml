@@ -1,16 +1,13 @@
 version: "3.8"
 
-# Variables réutilisables
-x-eureka-env: &eureka_env
-  - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-service:8761/eureka
-
 networks:
   microservice-net:
     driver: overlay
-    attachable: true   # utile pour outils/clients qui se joignent au réseau
+    attachable: true   # permet aux conteneurs de test de se connecter facilement
 
 services:
 
+  # Eureka Service (Registry)
   eureka-service:
     image: houssemsouid/eureka-service:latest
     ports:
@@ -25,97 +22,101 @@ services:
       restart_policy:
         condition: any
 
+  # API Gateway
   gateway:
     image: houssemsouid/gateway:latest
     ports:
       - "8888:8888"
-    networks: [microservice-net]
-    depends_on: [eureka-service]   # (note: ignoré par Swarm au runtime)
-    environment: *eureka_env
+    networks:
+      - microservice-net
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-service:8761/eureka
+    depends_on:
+      - eureka-service
     deploy:
       replicas: 1
-      resources:
-        limits:
-          cpus: "0.50"
-          memory: 512M
-        reservations:
-          cpus: "0.10"
-          memory: 128M
-      update_config:
-        parallelism: 1
-        delay: 10s
-        failure_action: rollback
       restart_policy:
         condition: any
-        max_attempts: 3
-      placement:
-        constraints:
-          - node.role == worker
-        preferences:
-          - spread: node.id
 
+  # Product Service
   product-service:
     image: houssemsouid/product-service:latest
     networks:
       - microservice-net
-    depends_on: [eureka-service]
-    environment: *eureka_env
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-service:8761/eureka
+    depends_on:
+      - eureka-service
     deploy:
       replicas: 1
       restart_policy:
         condition: any
 
+  # Billing Service
   billing-service:
     image: houssemsouid/billing-service:latest
     networks:
       - microservice-net
-    depends_on: [eureka-service]
-    environment: *eureka_env
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-service:8761/eureka
+    depends_on:
+      - eureka-service
     deploy:
       replicas: 1
       restart_policy:
         condition: any
 
+  # Billing Producer
   billing-producer:
     image: houssemsouid/billing-producer:latest
     networks:
       - microservice-net
-    depends_on: [eureka-service]
-    environment: *eureka_env
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-service:8761/eureka
+    depends_on:
+      - eureka-service
     deploy:
       replicas: 1
       restart_policy:
         condition: any
 
+  # Analyse Service
   analyse-service:
     image: houssemsouid/analyse-service:latest
     networks:
       - microservice-net
-    depends_on: [eureka-service]
-    environment: *eureka_env
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-service:8761/eureka
+    depends_on:
+      - eureka-service
     deploy:
       replicas: 1
       restart_policy:
         condition: any
 
-  custmer-service:
+  # Customer Service
+  custmer-service:     # ⚠️ attention à l’orthographe "custmer" (pas "customer")
     image: houssemsouid/custmer-service:latest
     networks:
       - microservice-net
-    depends_on: [eureka-service]
-    environment: *eureka_env
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-service:8761/eureka
+    depends_on:
+      - eureka-service
     deploy:
       replicas: 1
       restart_policy:
         condition: any
 
+  # Frontend (Angular)
   frontend:
     image: houssemsouid/frontend:latest
     ports:
       - "4200:80"
     networks:
       - microservice-net
-    depends_on: [gateway]
+    depends_on:
+      - gateway
     deploy:
       replicas: 1
       restart_policy:
