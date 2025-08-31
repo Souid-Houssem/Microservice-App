@@ -122,31 +122,31 @@ services:
       restart_policy:
         condition: any
 
-  # Loki (stockage et API de logs)
- loki:
-   image: grafana/loki:2.9.4
-   ports:
-     - "3100:3100"   # API Loki
-   networks:
-     - microservice-net
-   command: -config.file=/etc/loki/local-config.yaml
-   deploy:
-     replicas: 1
-     restart_policy:
-       condition: any
 
-# Promtail (collecte les logs des conteneurs)
-promtail:
-   image: grafana/promtail:2.9.4
-   networks:
-     - microservice-net
-   volumes:
-     - /var/log:/var/log:ro
-     - /var/lib/docker/containers:/var/lib/docker/containers:ro
-     - /etc/promtail:/etc/promtail   # on va créer ce fichier config
-   command: -config.file=/etc/promtail/promtail.yml
-   deploy:
-     replicas: 1
-     restart_policy:
-       condition: any
+   # Loki (stockage et API de logs)
+  loki:
+    image: grafana/loki:2.9.4
+    ports:
+      - "3100:3100"   # API Loki
+    networks:
+      - microservice-net
+    command: -config.file=/etc/loki/local-config.yaml
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
 
+  # Promtail (collecte les logs des conteneurs)
+  promtail:
+    image: grafana/promtail:2.9.4
+    networks:
+      - microservice-net
+    volumes:
+      - /var/log:/var/log:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /etc/promtail:/etc/promtail   # config promtail.yml
+    command: -config.file=/etc/promtail/promtail.yml
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
