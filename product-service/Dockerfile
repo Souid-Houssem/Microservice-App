@@ -1,15 +1,13 @@
-FROM openjdk:17-alpine
+FROM eclipse-temurin:17-jdk-alpine
 
 # Create and set working directory
-RUN mkdir /app
 WORKDIR /app
 
 # Copy JAR file into container
-COPY target/product-service-0.0.1-SNAPSHOT.jar /app/product-service.jar
+COPY target/product-service-0.0.1-SNAPSHOT.jar product-service.jar
 
-# Set the command to run the service
-CMD ["java", "-jar", "/app/product-service.jar"]
-
-# Expose the same port as the microservice
+# Expose the microservice port
 EXPOSE 8081
- 
+
+# Run the service
+CMD ["java", "-jar", "product-service.jar"]
